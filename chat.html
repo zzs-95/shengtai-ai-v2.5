@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 对话 — 笙态AI</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/chat.css">
+  <style>
+    /* 用户菜单 */
+    .user-menu { position: relative; display: inline-block; }
+    .user-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 16px;
+      background: var(--bg-glass); border: 1px solid var(--border-color);
+      border-radius: 20px; color: white; cursor: pointer;
+      font-size: 14px; transition: all 0.3s;
+    }
+    .user-btn:hover { background: rgba(255,255,255,0.1); }
+    .user-avatar {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--gradient-primary);
+      display: flex; align-items: center; justify-content: center; font-size: 12px;
+    }
+    .user-dropdown {
+      position: absolute; top: 100%; right: 0; margin-top: 8px;
+      background: var(--bg-secondary); border: 1px solid var(--border-color);
+      border-radius: 12px; box-shadow: var(--shadow-lg);
+      min-width: 200px; display: none; z-index: 1000; overflow: hidden;
+    }
+    .user-dropdown.show { display: block; }
+    .dropdown-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px; color: var(--text-secondary);
+      text-decoration: none; cursor: pointer; transition: background 0.2s;
+    }
+    .dropdown-item:hover { background: var(--bg-glass); color: var(--text-primary); }
+    .dropdown-item.logout { color: #ff6b6b; }
+  </style>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <nav class="nav" style="background:var(--bg-secondary);border-bottom-color:rgba(255,255,255,0.1)">
+    <div class="container nav-inner">
+      <a href="index.html" class="nav-logo">
+        <div class="logo-icon">💫</div>
+        <span>笙态AI</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html">首页</a></li>
+        <li><a href="features.html">功能</a></li>
+        <li><a href="cases.html">案例</a></li>
+      </ul>
+      <div class="user-menu" id="userMenu" style="display:none;">
+        <button class="user-btn" onclick="toggleDropdown()">
+          <div class="user-avatar" id="userAvatar">?</div>
+          <span id="userName">用户</span>
+          <span>▼</span>
+        </button>
+        <div class="user-dropdown" id="userDropdown">
+          <div class="dropdown-item" onclick="logout()" style="border-bottom:1px solid var(--border-color)">
+            <span>📧</span> <span id="userEmail">user@email.com</span>
+          </div>
+          <div class="dropdown-item" onclick="clearAllData()">
+            <span>🗑️</span> 清除所有数据
+          </div>
+          <div class="dropdown-item logout" onclick="logout()">
+            <span>🚪</span> 退出登录
+          </div>
+        </div>
+      </div>
+      <a href="chat.html" class="nav-cta active">开始使用</a>
+    </div>
+  </nav>
+
+  <main class="chat-main">
+    <div class="chat-container">
+      <!-- 侧边栏 -->
+      <aside class="chat-sidebar">
+        <div class="sidebar-header">
+          <h3>💬 对话记录</h3>
+          <button class="btn-new-chat" onclick="newChat()">+ 新对话</button>
+        </div>
+        <div class="chat-history" id="chatHistory">
+          <p style="text-align:center;color:var(--text-muted);padding:20px;font-size:0.85rem">
+            💡 试试直接提问<br>无需登录！
+          </p>
+        </div>
+        <div class="sidebar-footer">
+          <p class="free-tier" style="font-size:0.9rem">
+            ✨ <strong>完全免费</strong><br>
+            <span style="font-size:0.8rem">无限次提问</span>
+          </p>
+        </div>
+      </aside>
+
+      <!-- 聊天区域 -->
+      <div class="chat-area">
+        <div class="chat-header-bar">
+          <div class="chat-model-info">
+            <span class="model-badge">✨</span>
+            <span>笙态AI · 智能助手</span>
+          </div>
+          <div class="chat-actions">
+            <button class="btn-clear" onclick="exportChat()">📥 导出</button>
+            <button class="btn-clear" onclick="clearChat()">🗑️ 清空</button>
+          </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+          <div class="message ai-message">
+            <div class="message-avatar">💫</div>
+            <div class="message-content">
+              <div class="message-bubble">
+                <p>👋 你好！我是 <strong>笙态AI</strong>！</p>
+                <p>🌟 完全免费，无限使用！</p>
+                <p style="margin-top:16px">我可以帮你：</p>
+                <ul style="margin-top:8px;padding-left:20px">
+                  <li>✈️ <strong>旅行规划</strong> — 推荐目的地、规划行程</li>
+                  <li>💼 <strong>职场建议</strong> — 简历优化、面试技巧</li>
+                  <li>👶 <strong>育儿教育</strong> — 科学育儿、亲子沟通</li>
+                  <li>💡 <strong>创意灵感</strong> — 写作策划、取名创意</li>
+                </ul>
+                <p style="margin-top:16px">请随时告诉我你的问题或需求！😊</p>
+              </div>
+              <div class="message-time">刚刚</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="suggestions" id="suggestions">
+          <p class="suggestions-label">试试这样问我：</p>
+          <div class="suggestion-chips">
+            <button class="chip" onclick="sendSuggestion(this)">推荐一个蜜月目的地</button>
+            <button class="chip" onclick="sendSuggestion(this)">帮我规划日本7日游</button>
+            <button class="chip" onclick="sendSuggestion(this)">职场新人如何快速成长？</button>
+            <button class="chip" onclick="sendSuggestion(this)">3岁孩子怎么教育？</button>
+          </div>
+        </div>
+
+        <div class="chat-input-area">
+          <div class="input-wrapper">
+            <textarea id="userInput" placeholder="输入你的问题，我会尽力帮助你..." rows="1" oninput="autoResize(this)" onkeydown="handleKeyDown(event)"></textarea>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 18 11 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+          <p class="input-hint">
+            <span>💡 输入后按 Enter 发送，Shift+Enter 换行</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/main.js"></script>
+  <script src="js/chat.js"></script>
+  <script>
+    // 切换下拉菜单
+    function toggleDropdown() {
+      document.getElementById('userDropdown').classList.toggle('show');
+    }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.user-menu')) {
+        document.getElementById('userDropdown').classList.remove('show');
+      }
+    });
+
+    // 退出登录
+    function logout() {
+      localStorage.clear();
+      location.reload();
+    }
+
+    // 清除所有数据
+    function clearAllData() {
+      if (confirm('确定清除所有数据吗？这将删除所有对话记录。')) {
+        localStorage.clear();
+        sessionStorage.clear();
+        newChat();
+        alert('已清除所有数据！');
+      }
+    }
+
+    // 导出对话
+    function exportChat() {
+      const messages = document.querySelectorAll('.message');
+      let text = '笙态AI 对话记录\n';
+      text += '='.repeat(30) + '\n\n';
+      
+      messages.forEach(msg => {
+        const bubble = msg.querySelector('.message-bubble');
+        if (bubble) {
+          const isAI = msg.classList.contains('ai-message');
+          text += (isAI ? '💫 笙态AI：\n' : '👤 你：\n');
+          text += bubble.innerText + '\n\n';
+        }
+      });
+      
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `笙态AI对话_${new Date().toLocaleDateString()}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // 回车发送
+    function handleKeyDown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+  </script>
+</body>
+</html>
